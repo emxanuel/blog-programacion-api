@@ -1,28 +1,19 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: {
+ username: {
     type: String,
     required: true,
     unique: true
   },
-  email: {
+email: {
     type: String,
     required: true,
     unique: true
   },
-  password: {
+   password: {
     type: String,
     required: true
-  },
-  admin: {
-    type: Boolean,
-    default: false
-  },
-  saved: [],
-  photo: {
-    type: String,
-    default: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
   },
   courses: [],
   sections: []
@@ -30,7 +21,6 @@ const userSchema = new mongoose.Schema({
 {
   timestamps: true
 });
-
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+const UserModel = mongoose.model('Users', UserSchema);
+export default = UserModel;
 
