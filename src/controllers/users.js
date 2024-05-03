@@ -1,39 +1,46 @@
 import { Usuario } from "@/models/users.model.js";
 import hash from "@/utils/hash.js";
+import jwt from "jsonwebtoken";
 
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        // Espera a que la consulta a la base de datos se complete
         const user = await Usuario.findOne({
-            Email: email,
-            Password: hash(password),
+            email: email,
+            password: hash(password),
         });
-        // Si user tiene un valor (es decir, si se encontró un usuario)
         if (user) {
-            res.status(200).json({ user });
+            const token = jwt.sign({ id: user._id, firstName: user.firstName, lastName: user.LastName }, process.env.AUTH_SECRET);
+            res.status(200).json({ user, token });
         } else {
-            // Si no se encontró un usuario
-            res.status(200).json({ message: false });
+            res.status(401).json({ message: false });
         }
     } catch (error) {
-        // Si ocurre algún error, envía un mensaje de error con un estado 500
         res.status(500).json({ message: error.message });
     }
 }
 
 export const register = async (req, res) => {
     try {
-        const {name, email, password} = req.body;
+        const {firstName, lastName, email, password} = req.body;
         const User = await Usuario.create({
-            Name: name,
-            Password: hash(password),
-            Email: email,
+            firstName,
+            lastName,
+            email,
+            password: hash(password),
+            finishedClasses: [],
+            role: "user"
         });
 
         res.status(200).json({ User });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        switch(error.code){
+            case 11000:
+                res.status(500).json({ message: "Este correo ya está registrado" });
+                break;
+            default:
+                res.status(500).json({ message: error.message });
+        }
     }
 }
 
@@ -43,7 +50,7 @@ export const addClassToUser = async (req, res) => {
         const User = await Usuario.findByIdAndUpdate(id, req.body);
 
         if (!User) {
-            return res.status(404).json({ message: " Usuario not found" });
+            return res.status(404).json({ message: "Usuario not found" });
         }
         const updateUser = await Usuario.findById(id);
         res.status(200).json(updateUser);
@@ -52,10 +59,9 @@ export const addClassToUser = async (req, res) => {
     }
 }
 
-export const getUsers = async (req, res) => {
+export const getUsers = async (_, res) => {
     try {
         const User = await Usuario.find();
-
         res.status(200).json({ User });
     } catch (error) {
         res.status(500).json({ message: error.message });
